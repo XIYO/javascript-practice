@@ -59,7 +59,7 @@ class InnerChild {
         console.log('this is inner child constructor');
     }
 }
-
+ 
 
 let chibi = new Child();
 let chibi2 = new Child();
