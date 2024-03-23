@@ -11,7 +11,7 @@
 
 ```shell
 # cd practice-001
-deno run ./practice.js
+deno run ./practice-001.js
 ```
 
 ## 복제 가능한 타입
