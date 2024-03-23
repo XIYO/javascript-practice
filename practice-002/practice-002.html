@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<h2>Array.isArray vs instanceof Array in Different Runtime Environments</h2>
+
+<iframe id="myFrame" style="display:none;"></iframe>
+
+<script>
+	// 메인 페이지에서 배열 생성
+	const arrInMain = [];
+
+	// iframe에 접근
+	const iframe = document.getElementById("myFrame");
+	const arrInIframe = iframe.contentWindow.eval("[]");
+
+	// 메인 페이지에서 생성된 배열 검증
+	console.log("Main Array with instanceof Array:", arrInMain instanceof Array); // true
+	console.log("Main Array with Array.isArray:", Array.isArray(arrInMain)); // true
+
+	// iframe에서 생성된 배열 검증
+	// 유일하게 iframe에서 생성된 배열은 instanceof Array로 검증이 불가능하다.
+	console.log("Iframe Array with instanceof Array:", arrInIframe instanceof Array); // false
+	console.log("Iframe Array with Array.isArray:", Array.isArray(arrInIframe)); // true
+
+	// structured cloneArray 으로 복제
+	const cloneArray = structuredClone(arrInIframe);
+	console.log("clone Array Cloned with instanceof Array:", cloneArray instanceof Array); // true
+	console.log("clone Array Cloned with Array.isArray:", Array.isArray(cloneArray)); // true
+
+	if (window.Worker) {
+		const worker = new Worker("code/worker.js");
+
+		// 워커로부터 메시지 수신
+		// 워커로 전송된 객체는 structured cloneArray algorithm 에 의해 새로운 객체가 되어 컨텍스트가 다시 지정 된다.
+		worker.onmessage = function (e) {
+			console.log("Received from worker:", e.data);
+			console.log("Worker Array with instanceof Array:", e.data instanceof Array); // true
+			console.log("Worker Array with Array.isArray:", Array.isArray(e.data)); // true
+		};
+
+		// 워커로 메시지 전송
+		worker.postMessage('Hello Worker');
+	} else {
+		console.log("Your browser does not support Web Workers.");
+	}
+
+	/** @type {Array<Array<number>>} */
+	const arr = [];
+	const time = 10_000_000_000;
+
+	// 1st
+	// test browser edge
+	// Array.isArray: 17264.885986328125 ms
+	console.time('Array.isArray');
+	for (let i = 0; i < time; i++) {Array.isArray(arr);}
+	console.timeEnd('Array.isArray');
+
+	// 2nd
+	// test browser edge
+	// instanceof: 54591.611083984375 ms
+	console.time('instanceof');
+	for (let i = 0; i < time; i++) {(arr instanceof Array);}
+	console.timeEnd('instanceof');
+
+	Array.polyfillIsArray = function (obj) {return Object.prototype.toString.call(obj) === '[object Array]';}
+
+	// 3rd
+	// test browser edge
+	// Array.polyfillIsArray: 75599.9169921875 ms
+	console.time('Array.polyfillIsArray');
+	for (let i = 0; i < time; i++) {Array.polyfillIsArray(arr);}
+	console.timeEnd('Array.polyfillIsArray');
+</script>
+</body>
+</html>
